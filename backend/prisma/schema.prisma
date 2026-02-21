@@ -12,7 +12,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL") // Não precisa mais disso, ele dá erro nas novas versões
+
+// url = env("DATABASE_URL") // Não precisa mais disso, ele dá erro nas novas versões
 }
 
 // Cria a tabela do BD
