@@ -1,0 +1,202 @@
+
+npm init -y
+npm install express prisma @prisma/client dotenv
+npm install -D typescript ts-node-dev @types/node @types/express
+
+// Criar arquivo de configuração do TS
+npx tsc -init
+
+// Crie um arquivo .env
+DATABASE_URL="postgresql://postgres:123@localhost:5432/todo_db"
+
+// para iniciar o prisma
+ npx prisma init --datasource-provider postgresql
+ 
+ // arquivo schema.prisma:
+ generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+model Task {
+	id 		Int @id @default(autoincrement())
+	title 	String
+	description String?
+	done 	Boolean @default(false)
+	createdAt	DateTime @default(now())
+}
+
+// Gerar as migrações e sincronizar o BD
+npx prisma migrate dev --name init
+
+No PowerShell para verificar se o banco de dados está instalado, utilize:
+netstat -an | findstr 5432
+
+Se aparecer algo como:
+TCP    0.0.0.0:5432     LISTENING
+O banco está ativo.
+--------------------------------------------------------------
+
+Configuração do tsconfig.json :
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "module": "commonjs",
+    "target": "ES6",
+    "types": [],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    "strict": true,
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": false,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+  }
+}
+--------------------------------------------------------------
+Configuração do package.json :
+"scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "seed": "ts-node prisma/seed.ts"
+  },
+
+--------------------------------------------------------------
+Vamos criar a pasta src
+src/controllers
+	taskController.ts
+
+// importa o PrismaClient para realizar operações no BD
+import { PrismaClient } from "@prisma/client";
+
+// importa os tipos Request Response do Express para tipagem das requisições
+import { Request, Response } from "express";
+
+// Instacia o cliente do Prisma que será responsável pela conexão ao BD
+const prisma = new PrismaClient();
+
+// GET Buscar todas as tarefas no BD.
+export const getTasks = asybc (req: Request, res: Response) => {
+	//Executa uma consulta para retornar todos os registros da tabela
+	const tasks = await prisma.task.findMany();
+
+	console.log("Tarefas encontradas: ",tasks);
+	
+	// retornar as tarefas no formato JSON
+	res.json(tasks);
+};
+
+// POST Criar uma nova tarefa
+export const createTask = async (req: Request, res: Response) => {
+	// Extrai os dados enviados no corpo da requisição
+	const { title, description } = req.body;
+
+	// Cria um novo registro na tabela "task
+	const task = await prisma.task.create({
+	data: { title, description },
+	});
+
+	// Retorna a tarefa criada com status HTTP 201
+	res.status{201}.json(task);
+};
+
+
+// PUT Atualiza uma tarefa existente
+export const updateTask = async (req: Request, res: Response) => {
+	// Extrai o ID da URL
+	const { id } = req.params;
+
+	//Extrai os novos dados enviados no corpo da requisição
+	const { title, description, done } = req.body;
+
+	// Atualiza o registro correspondente ao ID informado
+	const task = await prisma.task.update({
+		where: { id: Number(id)  },
+		data: { title, description, done },
+	});
+
+	// Retorna tarefas atualizadas
+	res.jason(task);
+};
+
+// DELETE Remove uma tarefa do BD
+export const deleteTask = async (req: Request, res: Response) => {
+	// Extrai o ID da URL
+	const { id } = req.params;
+
+	//Remove o registro correspondente
+	await prisma.task.delete({
+		where: { id: Number(id) },
+	});
+
+	//Retorna status HTTP 204
+	res.status(204).send();
+};
+
+
+	
+
+
+src/routes
+	taskRoutes.ts
+
+// Importar o freamework Express
+import express from "express";
+
+import {
+	getTask,
+	createTask,
+	updateTask,
+	deleteTask
+} from "../controllers/taskController";
+
+// Cria uma instância que permite modularizar as rotas
+const router = express.Router();
+
+router.get("/", getTasks); // responsável por listar as tarefas
+router.post("/", createTask); // responsável por criar as tarefas
+router.put("/:id", updateTask); // responsável por atualizar as tarefas
+router.delete("/:id", deleteTask): // responsável por deletar as tarefas
+
+// Exporta as rotas
+export const taskRoutes = router;
+
+
+
+Na raiz do src index.ts
+import express from "express";
+import dotenv from "dotenv";
+import { taskRoutes } from "./routes/taskRoutes";
+
+//Carrega variáveis de ambiente
+dotenv.config();
+
+// Cria a instância principal da aplicação
+const app = express();
+
+//Middleware para interpretar requisições no JSON
+app.use(express.json());
+
+app.get("/", (req, res) => {
+	res.send(" API List está rodando! Acesse /task para usar.");
+});
+
+app. use("/tasks", taskRoutes);
+
+// Inicializa o servidor
+app.listen(3000, () => {
+	console.log("Servidor rodando em http://localhost:3000");
+});
