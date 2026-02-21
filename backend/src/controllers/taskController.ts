@@ -1,21 +1,23 @@
 import { PrismaClient } from "@prisma/client";
 console.log("PRISMA TYPE:", PrismaClient);
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg"; // Importa o adaptador da biblioteca do Prisma
+import { Pool } from "pg"; // Comunicaçaão com PSQL
 import { Request, Response } from "express";
 
 console.log(process.env.DATABASE_URL)
 
+// Estabelece conexão com BD via URL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaPg(pool); // Liga o adaptador a conexão
 
 console.log("INSTANCIANDO PRISMA...");
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({ adapter }); // Esse é o adaptador que precisa pra versão acima da 7 do Prisma
 console.log("PRISMA OK");
 
+// CRUD SIMPLES 
 export const getTasks = async (req: Request, res: Response) => {
 	const tasks = await prisma.task.findMany();
 	console.log("Tarefas encontradas:", tasks); // debug 
