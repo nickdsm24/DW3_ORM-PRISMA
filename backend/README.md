@@ -1,1 +1,0 @@
-# Projeto utilizando Prisma ORM
