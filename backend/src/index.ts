@@ -1,8 +1,5 @@
 import "dotenv/config";
 
-console.log("CWD:", process.cwd());
-console.log("ENV FILE TEST:", process.env.DATABASE_URL);
-
 import express from "express";
 import { taskRoutes } from "./routes/taskRoutes";
 
