@@ -1,3 +1,5 @@
+// Arquivo para testar conexão do BD
+
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
